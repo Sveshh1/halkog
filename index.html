@@ -1,12 +1,311 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="utf-8">
-  <title>Мій перший сайт</title>
-  <link rel="stylesheet" href="src/style.css">
+  <meta charset="utf-8" />
+  <title>AR: Таблиця Менделєєва</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image.prod.js"></script>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    html, body, a-scene {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      background: black;
+      touch-action: none;
+    }
+
+    #info-panel {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      z-index: 999;
+      max-width: 320px;
+    }
+
+    #author {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: sans-serif;
+      z-index: 998;
+    }
+
+    #loading-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-family: sans-serif;
+      font-size: 18px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 16px 24px;
+      border-radius: 8px;
+      z-index: 1000;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #666;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 6px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px 4px 0 0;
+      user-select: none;
+      transition: background 0.3s;
+    }
+
+    .tab.active {
+      background: rgba(255, 255, 255, 0.3);
+      font-weight: bold;
+      border-bottom: 2px solid #fff;
+    }
+
+    .tab-content {
+      display: none;
+      font-size: 14px;
+      line-height: 1.4em;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Центровані повідомлення логів */
+    #log-container {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      z-index: 999;
+    }
+
+    .log-message {
+      background: rgba(0, 0, 0, 0.85);
+      color: #00ffcc;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 13px;
+      box-shadow: 0 0 8px rgba(0, 255, 200, 0.4);
+      opacity: 1;
+      animation: fadeOut 5s forwards;
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
 </head>
 <body>
-  <h1>Привіт, це моя робота!</h1>
-  <p>Тут буде контент.</p>
+  <div id="author">Проєкт виконала Свєшнікова Анастасія</div>
+
+  <div id="info-panel">
+    <div class="tabs">
+      <div class="tab active" data-tab="details">Детальна інформація</div>
+      <div class="tab" data-tab="trends">Тренди властивостей</div>
+      <div class="tab" data-tab="shells">Електронні оболонки</div>
+    </div>
+
+    <div id="details" class="tab-content active">
+      <h3 id="element-name">Очікування маркера...</h3>
+      <p><strong>Атомний номер/маса:</strong> <span id="atomic-number">...</span></p>
+      <p><strong>Радіус:</strong> <span id="radius">...</span></p>
+      <p><strong>Електронегативність:</strong> <span id="electronegativity">...</span></p>
+    </div>
+
+    <div id="trends" class="tab-content">
+      <p><em>Очікування даних...</em></p>
+    </div>
+
+    <div id="shells" class="tab-content">
+      <p><strong>Електронні оболонки:</strong> <span id="shells">...</span></p>
+    </div>
+  </div>
+
+  <div id="log-container"></div>
+  <div id="loading-message">Натисніть, щоб запустити AR та дозволити камеру</div>
+
+  <a-scene mindar-image="imageTargetSrc: targets.mind;" embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-image src="src/1.png" position="0 0 0" width="1" height="1"></a-image>
+    </a-entity>
+    <a-entity mindar-image-target="targetIndex: 1">
+      <a-image src="src/2.png" position="0 0 0" width="1" height="1"></a-image>
+    </a-entity>
+    <a-entity mindar-image-target="targetIndex: 2">
+      <a-image src="src/3.png" position="0 0 0" width="1" height="1"></a-image>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const logContainer = document.getElementById("log-container");
+
+      function addLog(message, emoji = "🔔") {
+        const time = new Date().toLocaleTimeString();
+        const log = document.createElement("div");
+        log.className = "log-message";
+        log.textContent = `[${time}] ${emoji} ${message}`;
+        logContainer.appendChild(log);
+
+        // Видалити після 5 секунд
+        setTimeout(() => {
+          log.remove();
+        }, 5000);
+      }
+
+      addLog("DOM повністю завантажений", "📦");
+
+     const elements = {
+  0: {
+    name: "Гідроген",
+    symbol: "H",
+    atomicNumber: "1 / 1",
+    radius: "53 пм",
+    electronegativity: "2,2",
+    shells: `1S<sub>1</sub>, де 1 – номер енергетичного рівня, S – підрівень, 1 – число електронів на ньому`,
+    trends: `
+      <p><strong>Розміщення:</strong> IА група (до лужних металів), і VIIА група (до галогенів)</p>
+      <p><strong>Ступінь окиснення:</strong> 1, 0, -1</p>
+      <p><strong>Тренди властивостей:</strong><br>
+      Газ без кольору, запаху й смаку. Утворює ковалентні зв’язки в молекулах. Може виступати як відновник. Реагує з металами та неметалами.</p>
+    `
+  },
+  1: {
+    name: "Гелій",
+    symbol: "He",
+    atomicNumber: "2 / 4",
+    radius: "31 пм",
+    electronegativity: "4,5",
+    shells: `1S<sub>2</sub>, де 1 – номер енергетичного рівня, S – підрівень, 2 – число електронів на ньому`,
+    trends: `
+      <p><strong>Розміщення:</strong> Головна підгрупа VIIIА групи (інертні гази)</p>
+      <p><strong>Ступінь окиснення:</strong> 0</p>
+      <p><strong>Тренди властивостей:</strong><br>
+      За нормальних умов є одноатомним газом, який легкий, хімічно інертний, без запаху, кольору та смаку. Не вступає в реакції з іншими елементами.</p>
+    `
+  },
+  2: {
+    name: "Берилій",
+    symbol: "Be",
+    atomicNumber: "4 / 9",
+    radius: "112 пм",
+    electronegativity: "1,57",
+    shells: `1S<sub>2</sub> 2S<sub>2</sub>, де 1 – номер енергетичного рівня, S – підрівень, 2 – число електронів на ньому, 2 – номер енергетичного рівня, S – підрівень, 2 – число електронів`,
+    trends: `
+      <p><strong>Розміщення:</strong> Головна підгрупа ІІА групи</p>
+      <p><strong>Ступінь окиснення:</strong> 0, 1, 2</p>
+      <p><strong>Тренди властивостей:</strong><br>
+      Один із найтвердіших металів. Має високу теплопровідність. Немає запаху, а колір сріблясто-сірий. Виявляє як основні, так і кислотні властивості. Реагує з кислотами, киснем та лугами.</p>
+    `
+  }
+};
+
+
+      const sceneEl = document.querySelector('a-scene');
+      const loadingMessage = document.getElementById('loading-message');
+      const elName = document.getElementById("element-name");
+      const atomicNum = document.getElementById("atomic-number");
+      const shells = document.getElementById("shells");
+      const radius = document.getElementById("radius");
+      const electronegativity = document.getElementById("electronegativity");
+      const trendsDiv = document.getElementById("trends");
+
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+      });
+
+      async function requestCameraAccess() {
+        try {
+          await navigator.mediaDevices.getUserMedia({ video: true });
+          addLog("Доступ до камери отримано", "📷");
+          return true;
+        } catch (err) {
+          addLog("Помилка доступу до камери: " + err.message, "❌");
+          alert("Доступ до камери відхилено або недоступний.");
+          return false;
+        }
+      }
+
+      function waitForMindARComponent(callback) {
+        const checkInterval = setInterval(() => {
+          if (sceneEl.systems && sceneEl.systems['mindar-image']) {
+            clearInterval(checkInterval);
+            callback();
+          }
+        }, 200);
+      }
+
+      loadingMessage.addEventListener('click', async () => {
+        loadingMessage.innerText = "🔍 Запит доступу до камери...";
+        const granted = await requestCameraAccess();
+        if (!granted) return;
+
+        loadingMessage.innerText = "🚀 Дозвіл отримано. Ініціалізація MindAR...";
+        waitForMindARComponent(() => {
+          const mindARSystem = sceneEl.systems['mindar-image'];
+          if (mindARSystem) {
+            mindARSystem.start();
+            loadingMessage.style.display = 'none';
+            addLog("MindAR запущено", "🚀");
+          }
+        });
+      });
+
+      const markerEntities = document.querySelectorAll('[mindar-image-target]');
+      markerEntities.forEach((markerEntity, idx) => {
+        markerEntity.addEventListener("targetFound", () => {
+          const data = elements[idx];
+          if (!data) return;
+
+          addLog(`Маркер знайдено! Елемент: ${data.symbol}`, "🎯");
+
+          elName.innerText = `${data.symbol} - ${data.name}`;
+          atomicNum.innerText = data.atomicNumber;
+          shells.innerHTML = data.shells;
+          radius.innerText = data.radius;
+          electronegativity.innerText = data.electronegativity;
+          trendsDiv.innerHTML = data.trends || "<p>Інформація відсутня.</p>";
+        });
+      });
+    });
+  </script>
 </body>
 </html>
